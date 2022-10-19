@@ -76,7 +76,10 @@ void  funcion_hebra_productora(  )
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
       int dato = producir_dato() ;
+      libres.sem_wait();
       // completar ........
+      //insertar valor 'a' en 'vec'
+      ocupadas.sem_signal();
    }
 }
 
@@ -87,7 +90,10 @@ void funcion_hebra_consumidora(  )
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
       int dato ;
+      ocupadas.sem_wait();
       // completar ......
+      //extraer valor 'b' de 'vec'
+      libres.sem_signal();
       consumir_dato( dato ) ;
     }
 }
