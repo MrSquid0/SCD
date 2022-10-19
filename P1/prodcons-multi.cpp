@@ -12,8 +12,8 @@ using namespace scd ;
 // Variables globales
 
 const unsigned 
-   num_items = 40 ,   // número de items
-	tam_vec   = 10 ;   // tamaño del buffer
+   num_items = 50 ,   // número de items
+   tam_vec   = 10 ;   // tamaño del buffer
 unsigned  
    cont_prod[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha producido.
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
@@ -22,6 +22,10 @@ unsigned
 Semaphore
     libres = tam_vec,
     ocupadas = 0;
+
+int
+    vec_intermedio[tam_vec], //Vector intermedio (buffer) de tamaño tam_vec
+    primera_libre = 0; //Variable para reflejar el estado de ocupación del vector (LIFO) que va desde 0 hasta tam_vec-1
 
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
@@ -77,11 +81,14 @@ void  funcion_hebra_productora(  )
    {
       int dato = producir_dato() ;
       libres.sem_wait();
-      // completar ........
-      //insertar valor 'a' en 'vec'
+      //insertar 'dato' en vector intermedio
+      vec_intermedio[primera_libre] = dato;
+      primera_libre++;
       ocupadas.sem_signal();
    }
 }
+
+
 
 //----------------------------------------------------------------------
 
@@ -91,12 +98,55 @@ void funcion_hebra_consumidora(  )
    {
       int dato ;
       ocupadas.sem_wait();
-      // completar ......
-      //extraer valor 'b' de 'vec'
+      //extraer 'dato' del vector intermedio
+      primera_libre--;
+      dato = vec_intermedio[primera_libre];
       libres.sem_signal();
       consumir_dato( dato ) ;
     }
 }
+
+/* Versión FIFO
+ *
+ * int primera_libre = 0, primera_ocupada = 0; --> Variables globales
+ *
+ * void  funcion_hebra_productora(  )
+{
+   for( unsigned i = 0 ; i < num_items ; i++ )
+   {
+      int dato = producir_dato() ;
+      libres.sem_wait();
+      //insertar 'dato' en vector intermedio
+      vec_intermedio[primera_libre] = dato;
+      primera_libre = (primera_libre+1)%tam_vec;
+      ocupadas.sem_signal();
+   }
+}
+
+
+
+//----------------------------------------------------------------------
+
+void funcion_hebra_consumidora(  )
+{
+   for( unsigned i = 0 ; i < num_items ; i++ )
+   {
+      int dato ;
+      ocupadas.sem_wait();
+      //extraer 'dato' del vector intermedio
+      dato = vec_intermedio[primera_ocupada];
+      primera_ocupada = (primera_ocupada+1)%tam_vec;
+      libres.sem_signal();
+      consumir_dato( dato ) ;
+    }
+}
+ *
+ *
+ *
+ */
+
+
+
 //----------------------------------------------------------------------
 
 int main()
