@@ -8,7 +8,10 @@ pc: prodcons_exe
 	./$<
 
 fu: fumadores_exe
-	./$< 
+	./$<
+
+pcm: prodcons-multi_exe
+	./$<
 
 ## esto solo se usa para probar que la plantilla compila
 ## (da error al ejecutar)
