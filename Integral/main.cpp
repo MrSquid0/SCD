@@ -56,7 +56,7 @@ int main( )
     time_point<steady_clock> instante_final_conc = steady_clock::now();
     duration<float,milli> tiempo_sec = instante_final_sec - instante_inicio_sec;
     duration<float,milli> tiempo_conc = instante_final_conc - instante_inicio_conc;
-    const float porc = 100*tiempo_conc.count()/tiempo_sec.count();
+    const float porcentaje = 100 * tiempo_conc.count() / tiempo_sec.count();
 
     const double pi = 3.14159265358979312 ; // valor de π con bastantes decimales
 
@@ -71,5 +71,5 @@ int main( )
          << "Tiempo secuencial : " << tiempo_sec.count() << " milisegundos. " << endl
          << "Tiempo concurrente : " << tiempo_conc.count() << " milisegundos. " << endl
          << setprecision(4)
-         << "Porcentaje t.conc/t.sec. : " << porc << "%" << endl;
+         << "Porcentaje t.conc/t.sec. : " << porcentaje << "%" << endl;
 }
