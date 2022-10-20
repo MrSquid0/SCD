@@ -48,8 +48,8 @@ void funcion_hebra_estanquero(  )
     int i;
     while(true){
         i = producir_ingrediente();
-        sem_signal(ingr_disp[i]);
-        sem_wait(mostr_vacio);
+        ingr_disp[i].sem_signal();
+        mostr_vacio.sem_wait();
         cout << "Se ha colocado en el mostrador el ingrediente: " << i << endl;
     }
 }
