@@ -1,10 +1,9 @@
 #include <iostream>
 #include <thread>
-#include "test.h"
 
 using namespace std;
 
 int main() {
-
-    print();
+    std::cout << "Proyecto nuevo para la práctica 1 de SCD" << std::endl;
+    return 0;
 }
