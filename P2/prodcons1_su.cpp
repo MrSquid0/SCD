@@ -103,10 +103,12 @@ class ProdConsSU1 : public HoareMonitor
 {
  private:
  static const int           // constantes ('static' ya que no dependen de la instancia)
-   num_celdas_total = 10;   //   núm. de entradas del buffer
+   num_celdas_total = 10,   //   núm. de entradas del buffer
+   n;                       // num. de entradas al buffer ocupadas
  int                        // variables permanentes
    buffer[num_celdas_total],//   buffer de tamaño fijo, con los datos
-   primera_libre ;          //   indice de celda de la próxima inserción ( == número de celdas ocupadas)
+   primera_libre,          //   indice de celda de la próxima inserción ( == número de celdas ocupadas)
+   primera_ocupada;
 
  CondVar                    // colas condicion:
    ocupadas,                //  cola donde espera el consumidor (n>0)
@@ -122,6 +124,7 @@ class ProdConsSU1 : public HoareMonitor
 ProdConsSU1::ProdConsSU1(  )
 {
    primera_libre = 0 ;
+   primera_ocupada = 0;
    ocupadas      = newCondVar();
    libres        = newCondVar();
 }

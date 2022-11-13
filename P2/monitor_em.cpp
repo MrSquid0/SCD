@@ -24,6 +24,7 @@
 
 using namespace std ;
 using namespace scd ;
+using namespace std::chrono;
 
 const int num_incrementos = 10000 ;
 
@@ -105,16 +106,20 @@ void test_1()
 {
    MContador1 monitor(0) ;
 
+   time_point<steady_clock> instante_inicio = steady_clock::now();
    thread hebra1( funcion_hebra_M1, ref(monitor) ),
           hebra2( funcion_hebra_M1, ref(monitor) );
 
    hebra1.join();
    hebra2.join();
+   time_point<steady_clock> instante_final = steady_clock::now();
+   duration<float,micro> duracion_micros = instante_final - instante_inicio;
 
-   cout  << "Monitor contador (sin exclusión mutua):" << endl
+    cout  << "Monitor contador (sin exclusión mutua):" << endl
          << endl
          << "  valor esperado == " << 2*num_incrementos << endl
          << "  valor obtenido == " << monitor.leer_valor() << endl
+         << "  tiempo == " << duracion_micros.count() << " microsegundos." << endl
          << endl;
 }
 // *****************************************************************************
@@ -130,16 +135,21 @@ void test_2()
 {
    MRef<MContador2> monitor = Create<MContador2>(0) ;
 
+   time_point<steady_clock> instante_inicio = steady_clock::now();
    thread hebra1( funcion_hebra_M2, monitor ),
           hebra2( funcion_hebra_M2, monitor );
 
    hebra1.join();
    hebra2.join();
+   time_point<steady_clock> instante_final = steady_clock::now();
 
-   cout  << "Monitor contador (EM usando clase derivada de HoareMonitor):" << endl
+   duration<float,micro> duracion_micros = instante_final - instante_inicio;
+
+    cout  << "Monitor contador (EM usando clase derivada de HoareMonitor):" << endl
          << endl
          << "  valor esperado == " << 2*num_incrementos << endl
          << "  valor obtenido == " << monitor->leer_valor() << endl
+         << "  tiempo == " << duracion_micros.count() << " microsegundos." << endl
          << endl ;
 }
 // *****************************************************************************
