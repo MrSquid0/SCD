@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 //
 // Sistemas concurrentes y Distribuidos.
-// Seminario 2. Introducción a los monitores en C++11.
+// Seminario2 2. Introducción a los monitores en C++11.
 //
 // Archivo: prodcons1_su.cpp
 //
@@ -20,7 +20,7 @@
 #include <cassert>
 #include <random>
 #include <thread>
-#include "scd.h"
+#include "../scd.h"
 
 using namespace std ;
 using namespace scd ;

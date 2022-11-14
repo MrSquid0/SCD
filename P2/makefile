@@ -4,10 +4,10 @@
 compilador:=g++
 opcionesc:= -std=c++11 -pthread -Wfatal-errors
 
-x: monitor_em_exe
+x: Seminario2/monitor_em_exe
 	./$<
 
-pc1: prodcons1_su_exe
+pc1: Seminario2/prodcons1_su_exe
 	./$<
 
 pc1b: prodcons1_su_fifo_exe

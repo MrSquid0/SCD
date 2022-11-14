@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
 //
 // Sistemas concurrentes y Distribuidos.
-// Seminario 2. Introducción a los monitores en C++11.
+// Seminario2 2. Introducción a los monitores en C++11.
 //
 // archivo: monitor_em.cpp
 // Ejemplo de monitores en C++11 sin variables condición
@@ -20,7 +20,7 @@
 #include <thread>
 #include <mutex>
 #include <random>
-#include "scd.h"
+#include "../scd.h"
 
 using namespace std ;
 using namespace scd ;
