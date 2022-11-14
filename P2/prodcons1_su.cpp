@@ -107,8 +107,8 @@ class ProdConsSU1 : public HoareMonitor
  int                        // variables permanentes
    buffer[num_celdas_total],//   buffer de tamaño fijo, con los datos
    primera_libre,           //   indice de celda de la próxima inserción ( == número de celdas ocupadas)
-   primera_ocupada,
-   n;                       // num. de entradas al buffer ocupadas
+   primera_ocupada,         // índice de celda de la próxima extracción (solo necesaria en tipo FIFO)
+   n;                       // num. de entradas al buffer ocupadas (solo necesaria en tipo FIFO)
 
  CondVar                    // colas condicion:
    ocupadas,                //  cola donde espera el consumidor (n>0)
