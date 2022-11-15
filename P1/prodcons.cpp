@@ -25,8 +25,8 @@ Semaphore
 
 int
     vec_intermedio[tam_vec], //Vector intermedio (buffer) de tamaño tam_vec
-    primera_libre = 0; //Variable para reflejar el estado de ocupación del vector (LIFO) que va desde 0 hasta tam_vec-1
-    //primera_ocupada = 0; //Variable para FIFO (comentada ya que se usó la versión LIFO)
+    primera_libre = 0, //Variable para reflejar el estado de ocupación del vector (LIFO) que va desde 0 hasta tam_vec-1
+    primera_ocupada = 0; //Variable para FIFO (comentada ya que se usó la versión LIFO)
 
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
@@ -82,11 +82,11 @@ void  funcion_hebra_productora(  )
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
       int dato = producir_dato() ;
-      libres.sem_wait();
+      sem_wait(libres);
       //insertar 'dato' en vector intermedio
       vec_intermedio[primera_libre] = dato;
       primera_libre = (primera_libre+1)%tam_vec;
-      ocupadas.sem_signal();
+      sem_signal(ocupadas);
    }
 }
 
@@ -98,26 +98,27 @@ void funcion_hebra_consumidora(  )
 {
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
-       /* Versión FIFO
-        *
+       // Versión FIFO
+
       int dato ;
-      ocupadas.sem_wait();
+      sem_wait(ocupadas);
       //extraer 'dato' del vector intermedio
       dato = vec_intermedio[primera_ocupada];
       primera_ocupada = (primera_ocupada+1)%tam_vec;
-      libres.sem_signal();
+      sem_signal(libres);
       consumir_dato( dato ) ;
-        *
-        */
 
+
+/*
       //Versión LIFO
       int dato ;
-      ocupadas.sem_wait();
+      sem_wait(ocupadas);
       //extraer 'dato' del vector intermedio
       primera_libre--;
       dato = vec_intermedio[primera_libre];
-      libres.sem_signal();
-      consumir_dato( dato ) ;
+      sem_signal(libres);
+      consumir_dato( dato ) ; */
+
     }
 }
 
