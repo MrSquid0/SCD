@@ -16,10 +16,7 @@
 // --------------------------------------------------------------------------------------
 
 #include <iostream>
-#include <cassert>
 #include <thread>
-#include <mutex>
-#include <random>
 #include "../scd.h"
 
 using namespace std ;

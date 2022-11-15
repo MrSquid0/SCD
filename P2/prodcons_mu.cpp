@@ -16,9 +16,7 @@
 
 
 #include <iostream>
-#include <iomanip>
 #include <cassert>
-#include <random>
 #include <thread>
 #include "scd.h"
 
