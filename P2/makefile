@@ -19,6 +19,9 @@ pcm: prodcons_mu_exe
 fu: fumadores_exe
 	./$<
 
+le: lectoresEscritores_exe
+	./$<
+
 %_exe: %.cpp scd.cpp scd.h
 	$(compilador) $(opcionesc)  -o $@ $< scd.cpp
 

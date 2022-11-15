@@ -1,8 +1,6 @@
 #include <iostream>
 #include <cassert>
 #include <thread>
-#include <mutex>
-#include <random> // dispositivos, generadores y distribuciones aleatorias
 #include <chrono> // duraciones (duration), unidades de tiempo
 #include "scd.h"
 
@@ -39,7 +37,7 @@ int producir_ingrediente()
 }
 
 // *****************************************************************************
-// clase para monitor buffer, version FIFO, semántica SC, multiples prod/cons
+// clase para monitor Estanco
 
 class Estanco : public HoareMonitor
 {
