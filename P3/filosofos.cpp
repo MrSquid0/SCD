@@ -3,9 +3,8 @@
 // Sistemas concurrentes y Distribuidos.
 // Práctica 3. Implementación de algoritmos distribuidos con MPI
 //
-// Archivo: filosofos-plantilla.cpp
-// Implementación del problema de los filósofos (sin camarero).
-// Plantilla para completar.
+// Archivo: filosofos.cpp
+// Implementación del problema de los filósofos (sin camarero)
 //
 // Historial:
 // Actualizado a C++11 en Septiembre de 2017
@@ -24,7 +23,7 @@ using namespace std::chrono ;
 
 const int
    num_filosofos = 5 ,              // número de filósofos 
-   num_filo_ten  = 2*num_filosofos, // número de filósofos y tenedores 
+   num_filo_ten  = 2*num_filosofos, // número de filósofos y tenedores
    num_procesos  = num_filo_ten ;   // número de procesos total (por ahora solo hay filo y ten)
 
 

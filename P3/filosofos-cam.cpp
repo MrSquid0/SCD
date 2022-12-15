@@ -3,9 +3,8 @@
 // Sistemas concurrentes y Distribuidos.
 // Práctica 3. Implementación de algoritmos distribuidos con MPI
 //
-// Archivo: filosofos-plantilla.cpp
-// Implementación del problema de los filósofos (sin camarero).
-// Plantilla para completar.
+// Archivo: filosofos-cam.cpp
+// Implementación del problema de los filósofos (con camarero).
 //
 // Historial:
 // Actualizado a C++11 en Septiembre de 2017
@@ -25,9 +24,11 @@ using namespace std::chrono ;
 const int
    num_filosofos = 5 ,              // número de filósofos
    num_filo_ten  = 2*num_filosofos+1, // número de filósofos y tenedores
-   num_procesos  = num_filo_ten,   // número de procesos total (por ahora solo hay filo y ten)
-   etiq_levantar = 2,
-   etiq_sentar = 1;
+   num_procesos  = num_filo_ten,   // número de procesos total
+   etiq_levantar = 2,               //etiqueta para indicar los filósofos que se sientan
+   etiq_sentar = 1;                 //etiqueta para indicar los filósofos que se levantan
+
+int s = 0; //filósofos que están sentados
 
 
 //**********************************************************************
@@ -47,9 +48,9 @@ template< int min, int max > int aleatorio()
 
 void funcion_filosofos( int id )
 {
-  int id_ten_izq = (id+1)              % num_filo_ten, //id. tenedor izq.
-      id_ten_der = (id+num_filo_ten-1) % num_filo_ten, //id. tenedor der.
-      id_camarero = num_procesos-1,
+  int id_ten_izq = (id+1)              % (num_procesos-1), //id tenedor izq.
+      id_ten_der = (id+num_procesos-2) % (num_procesos-1), //id tenedor der.
+      id_camarero = num_procesos-1,                        //id camarero
       peticion;
 
   while ( true )
@@ -98,15 +99,14 @@ void funcion_tenedores( int id )
      MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
      id_filosofo = estado.MPI_SOURCE; //guardar en 'id_filosofo' el id. del emisor
      cout <<"Ten. " <<id <<" ha sido cogido por filo. " <<id_filosofo <<endl;
-     //recibir liberación de filósofo 'id_filosofo' (completar)
+     //recibir liberación de filósofo 'id_filosofo'
       MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
       cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
   }
 }
 
 void funcion_camarero(){
-    int s = 0, //filósofos que están sentados
-    etiq_actual,
+    int etiq_actual,
     valor;
     MPI_Status estado;
 
