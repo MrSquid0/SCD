@@ -28,6 +28,9 @@ f: filosofos_mpi_exe
 fc: filosofos-cam_mpi_exe
 	mpirun -oversubscribe  -np 11 ./$<
 
+fm: filosofos-malafolla_mpi_exe
+	mpirun -oversubscribe  -np 11 ./$<
+
 %_mpi_exe: %.cpp
 	$(compilador) $(flagsc) -o $@ $<
 
