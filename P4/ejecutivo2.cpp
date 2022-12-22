@@ -113,4 +113,5 @@ int main( int argc, char *argv[] )
   1) El mínimo tiempo de espera sería el segundo ciclo secundario: 10 ms.
   2) La tarea D seguiría siendo planificable. Sin embargo, el tiempo de espera mínimo
      se reduciría a 0, ya que ocuparíamos de manera íntegra los 500 ms de ese ciclo secundario.
+     Siempre que se pueda, es mejor dejar un margen libre con ninguna tarea ejecutándose.
 */
