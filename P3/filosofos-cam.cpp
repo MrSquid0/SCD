@@ -28,7 +28,7 @@ const int
    etiq_levantar = 2,               //etiqueta para indicar los filósofos que se sientan
    etiq_sentar = 1;                 //etiqueta para indicar los filósofos que se levantan
 
-int s = 0; //filósofos que están sentados
+int filosofosSentados = 0; //número de filósofos que están sentados
 
 
 //**********************************************************************
@@ -56,14 +56,14 @@ void funcion_filosofos( int id )
   while ( true )
   {
     cout <<"Filósofo " <<id << " solicita sentarse." << endl;
-    //solicita sentarse
+    //solicitar sentarse
     MPI_Ssend(&peticion, 1, MPI_INT, id_camarero, etiq_sentar, MPI_COMM_WORLD);
 
-    cout <<"Filósofo " <<id << " solicita ten. izq." <<id_ten_izq << endl;
+    cout <<"Filósofo " <<id << " solicita ten. izq. " <<id_ten_izq << endl;
     //solicitar tenedor izquierdo
     MPI_Ssend(&peticion, 1, MPI_INT, id_ten_izq, 0, MPI_COMM_WORLD);
 
-    cout <<"Filósofo " <<id <<" solicita ten. der." <<id_ten_der << endl;
+    cout <<"Filósofo " <<id <<" solicita ten. der. " <<id_ten_der << endl;
     //solicitar tenedor derecho
     MPI_Ssend(&peticion, 1, MPI_INT, id_ten_der, 0, MPI_COMM_WORLD);
 
@@ -100,31 +100,30 @@ void funcion_tenedores( int id )
      id_filosofo = estado.MPI_SOURCE; //guardar en 'id_filosofo' el id. del emisor
      cout <<"Ten. " <<id <<" ha sido cogido por filo. " <<id_filosofo <<endl;
      //recibir liberación de filósofo 'id_filosofo'
-      MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
-      cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
+     MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
+     cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
   }
 }
 
 void funcion_camarero(){
-    int etiq_actual,
-    valor;
+    int etiq_actual, valor;
     MPI_Status estado;
 
     while (true){
-        if (s >= num_filosofos-1) //4
-            etiq_actual = etiq_levantar;
+        if (filosofosSentados >= num_filosofos - 1) //si todos los filósofos están sentados
+            etiq_actual = etiq_levantar; //la petición será levantarse
         else
-            etiq_actual = MPI_ANY_TAG;
+            etiq_actual = MPI_ANY_TAG; //la petición será levantarse o sentarse
 
         MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, etiq_actual, MPI_COMM_WORLD, &estado);
 
         switch (estado.MPI_TAG) {
             case etiq_sentar:
-                s++;
+                filosofosSentados++;
                 cout << "El filósofo " << estado.MPI_SOURCE << " se sienta." << endl;
                 break;
             case etiq_levantar:
-                s--;
+                filosofosSentados--;
                 cout << "El filósofo " << estado.MPI_SOURCE << " se levanta." << endl;
                 break;
         }
@@ -144,8 +143,8 @@ int main( int argc, char** argv )
    if ( num_procesos == num_procesos_actual )
    {
       // ejecutar la función correspondiente a 'id_propio'
-      if ( id_propio == num_procesos-1 )
-          funcion_camarero();
+      if ( id_propio == num_procesos-1 ) //si es el último proceso
+          funcion_camarero(); //es el camarero
       else if ( id_propio % 2 == 0 )          // si es par
          funcion_filosofos( id_propio ); //   es un filósofo
       else                               // si es impar

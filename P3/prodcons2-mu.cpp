@@ -22,14 +22,14 @@ using namespace std::this_thread ;
 using namespace std::chrono ;
 
 const int
-   np                    = 4 ,
-   nc                    = 5 ,
-   id_buffer             = np ,
+   numProductores        = 4 ,
+   numConsumidores       = 5 ,
+   id_buffer             = numProductores ,
    num_procesos_esperado = 10 ,
-   num_items             = 20,
-   tam_vector            = 10,
-   etiq_prod             = 0,
-   etiq_cons             = 1;
+   num_items             = 20, //debe de ser múltiplo de numProductores y numConsumidores
+   tam_vector            = 10, //tamaño del vector
+   etiq_prod             = 0, //etiqueta del productor
+   etiq_cons             = 1; //etiqueta del consumidor
 
 //**********************************************************************
 // plantilla de función para generar un entero aleatorio uniformemente
@@ -48,7 +48,7 @@ template< int min, int max > int aleatorio()
 // y lleva espera aleatorio
 int producir(int n)
 {
-   static int contador = num_items / np * n ;
+   static int contador = num_items / numProductores * n ;
    sleep_for( milliseconds( aleatorio<10,100>()) );
    contador++ ;
    cout << "Productor " << n << " ha producido valor " << contador << endl << flush;
@@ -56,41 +56,41 @@ int producir(int n)
 }
 // ---------------------------------------------------------------------
 
-void funcion_productor(int n)
+void funcion_productor(int numProductor)
 {
-   for ( unsigned int i= 0 ; i < num_items/np ; i++ )
+   for (unsigned int i= 0 ; i < num_items / numProductores ; i++ )
    {
       // producir valor
-      int valor_prod = producir(n);
+      int valor_prod = producir(numProductor);
       // enviar valor
-      cout << "Productor " << n << " va a enviar valor " << valor_prod
-      << endl << flush;
+      cout << "Productor " << numProductor << " va a enviar valor " << valor_prod
+           << endl << flush;
       MPI_Ssend( &valor_prod, 1, MPI_INT, id_buffer, etiq_prod, MPI_COMM_WORLD );
    }
 }
 // ---------------------------------------------------------------------
 
-void consumir( int valor_cons, int n)
+void consumir( int valor_cons, int numConsumidor)
 {
    // espera bloqueada
    sleep_for( milliseconds( aleatorio<110,200>()) );
-   cout << "Consumidor " << n << " ha consumido valor " << valor_cons << endl << flush ;
+   cout << "Consumidor " << numConsumidor << " ha consumido valor " << valor_cons << endl << flush ;
 }
 // ---------------------------------------------------------------------
 
-void funcion_consumidor(int n)
+void funcion_consumidor(int numConsumidor)
 {
    int         peticion,
                valor_rec = 1 ;
    MPI_Status  estado ;
 
-   for( unsigned int i=0 ; i < num_items / nc; i++ )
+   for(unsigned int i=0 ; i < num_items / numConsumidores; i++ )
    {
       MPI_Ssend( &peticion,  1, MPI_INT, id_buffer, etiq_cons, MPI_COMM_WORLD);
       MPI_Recv ( &valor_rec, 1, MPI_INT, id_buffer, etiq_cons, MPI_COMM_WORLD,&estado );
-      cout << "Consumidor " << n << " ha recibido valor " << valor_rec
-      << endl << flush ;
-      consumir( valor_rec , n);
+      cout << "Consumidor " << numConsumidor << " ha recibido valor " << valor_rec
+           << endl << flush ;
+      consumir(valor_rec , numConsumidor);
    }
 }
 // ---------------------------------------------------------------------
@@ -110,11 +110,11 @@ void funcion_buffer()
       // 1. determinar si puede enviar solo prod., solo cons, o todos
 
       if ( num_celdas_ocupadas == 0 )               // si buffer vacío
-         etiq_aceptable = etiq_prod ;       // $~~~$ solo prod.
+         etiq_aceptable = etiq_prod ;       // recibir envíos de solo productores
       else if ( num_celdas_ocupadas == tam_vector ) // si buffer lleno
-         etiq_aceptable = etiq_cons ;      // $~~~$ solo cons.
+         etiq_aceptable = etiq_cons ;      // recibir envíos de solo consumidores
       else                                          // si no vacío ni lleno
-         etiq_aceptable = MPI_ANY_TAG ;     // $~~~$ cualquiera
+         etiq_aceptable = MPI_ANY_TAG ;     // recibir envíos de cualquiera
 
       // 2. recibir un mensaje del emisor o emisores aceptables
 
@@ -150,7 +150,7 @@ int main( int argc, char *argv[] )
 {
    int id_propio, num_procesos_actual;
 
-   // inicializar MPI, leer identif. de proceso y número de procesos
+   //Inicializar MPI, leer identificadores de procesos y número de procesos
    MPI_Init( &argc, &argv );
    MPI_Comm_rank( MPI_COMM_WORLD, &id_propio );
    MPI_Comm_size( MPI_COMM_WORLD, &num_procesos_actual );
@@ -158,7 +158,7 @@ int main( int argc, char *argv[] )
    if ( num_procesos_esperado == num_procesos_actual )
    {
       // ejecutar la operación apropiada a 'id_propio'
-      if ( id_propio < np )
+      if (id_propio < numProductores )
          funcion_productor(id_propio);
       else if ( id_propio == id_buffer )
          funcion_buffer();

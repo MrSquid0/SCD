@@ -1,21 +1,17 @@
 #include <iostream>
-#include <cassert>
 #include <thread>
-#include <mutex>
-#include <random> // dispositivos, generadores y distribuciones aleatorias
 #include <chrono> // duraciones (duration), unidades de tiempo
 #include "scd.h"
 
 using namespace std ;
 using namespace scd ;
 
-// numero de fumadores 
-
+// numero de fumadores
 const int num_fumadores = 3 ;
 
 Semaphore
-    mostr_vacio = 1,
-    ingr_disp[num_fumadores]{0,0,0};
+    mostr_vacio = 1, // 1 si mostrador vacío, 0 si ocupado
+    ingr_disp[3] = {0, 0, 0}; // 1 si el ingr. i está disponible en el mostrador, 0 si no
 
 //-------------------------------------------------------------------------
 // Función que simula la acción de producir un ingrediente, como un retardo
@@ -26,13 +22,13 @@ int producir_ingrediente()
    // calcular milisegundos aleatorios de duración de la acción de fumar)
    chrono::milliseconds duracion_produ( aleatorio<10,100>() );
 
+    const int num_ingrediente = aleatorio<0,num_fumadores-1>() ;
+
    // informa de que comienza a producir
-   cout << "Estanquero : empieza a producir ingrediente (" << duracion_produ.count() << " milisegundos)" << endl;
+   cout << "Estanquero : empieza a producir ingrediente " << num_ingrediente << " (" << duracion_produ.count() << " milisegundos)" << endl;
 
    // espera bloqueada un tiempo igual a ''duracion_produ' milisegundos
    this_thread::sleep_for( duracion_produ );
-
-   const int num_ingrediente = aleatorio<0,num_fumadores-1>() ;
 
    // informa de que ha terminado de producir
    cout << "Estanquero : termina de producir ingrediente " << num_ingrediente << endl;
@@ -45,12 +41,12 @@ int producir_ingrediente()
 
 void funcion_hebra_estanquero(  )
 {
-    int i;
-    while(true){
-        i = producir_ingrediente();
-        ingr_disp[i].sem_signal();
-        mostr_vacio.sem_wait();
-        cout << "Se ha colocado en el mostrador el ingrediente: " << i << endl;
+    int ingrediente;
+    while (true){
+        ingrediente = producir_ingrediente();
+        sem_wait(mostr_vacio);
+        cout << "Estanquero produce ingrediente " << ingrediente << endl;
+        sem_signal(ingr_disp[ingrediente]);
     }
 }
 
@@ -83,9 +79,9 @@ void  funcion_hebra_fumador( int num_fumador )
 {
    while( true )
    {
-       ingr_disp[num_fumador].sem_wait();
-       cout << "Se ha retirado del mostrador el ingrediente: " << num_fumador << endl;
-       mostr_vacio.sem_signal();
+       sem_wait(ingr_disp[num_fumador]);
+       cout << "El fumador " << num_fumador << " retira su ingrediente" << endl;
+       sem_signal(mostr_vacio);
        fumar(num_fumador);
    }
 }
@@ -94,13 +90,21 @@ void  funcion_hebra_fumador( int num_fumador )
 
 int main()
 {
-    thread
-        hebra_fumador[num_fumadores],
-        hebra_estanquero(funcion_hebra_estanquero);
+    cout << "-----------------------------------------------------------------" << endl
+         << "Problema de los fumadores" << endl
+         << "------------------------------------------------------------------" << endl
+         << flush ;
 
-    for(int i=0; i<num_fumadores; i++){
-        hebra_fumador[i] = thread(funcion_hebra_fumador, i);
-    }
+   thread hebra_estanquera (funcion_hebra_estanquero),
+          hebra_fumadora[num_fumadores];
 
-    hebra_estanquero.join();
+   for (int i=0; i<num_fumadores; i++){
+       hebra_fumadora[i] = thread(funcion_hebra_fumador, i);
+   }
+
+   hebra_estanquera.join();
+
+   for (int i=0; i<num_fumadores; i++){
+       hebra_fumadora[i].join();
+   }
 }

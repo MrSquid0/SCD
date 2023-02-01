@@ -1,8 +1,6 @@
 #include <iostream>
 #include <cassert>
 #include <thread>
-#include <mutex>
-#include <random>
 #include "scd.h"
 
 using namespace std ;
@@ -11,22 +9,20 @@ using namespace scd ;
 //**********************************************************************
 // Variables globales
 
-const unsigned 
-   num_items = 50 ,   // número de items
-   tam_vec   = 10 ;   // tamaño del buffer
-unsigned  
+const unsigned
+   num_items = 40 ,   // número de items
+	tam_vec   = 10 ;   // tamaño del buffer
+unsigned
    cont_prod[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha producido.
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
-   siguiente_dato       = 0 ;  // siguiente dato a producir en 'producir_dato' (solo se usa ahí)
+   siguiente_dato       = 0 ,  // siguiente dato a producir en 'producir_dato' (solo se usa ahí)
+   primera_libre = 0, //Celda a insertar en el buffer (LIFO y FIFO)
+   primera_ocupada = 0, //Celda a extraer del buffer (FIFO)
+   buffer[tam_vec]; //Buffer intermedio por donde se pasan los datos
 
 Semaphore
-    libres = tam_vec,
-    ocupadas = 0;
-
-int
-    vec_intermedio[tam_vec], //Vector intermedio (buffer) de tamaño tam_vec
-    primera_libre = 0, //Variable para reflejar el estado de ocupación del vector (LIFO) que va desde 0 hasta tam_vec-1
-    primera_ocupada = 0; //Variable para FIFO (comentada ya que se usó la versión LIFO)
+    libres = tam_vec, //Indica las celdas libres del buffer
+    ocupadas = 0;     //Indica las celdas ocupadas del buffer
 
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
@@ -38,7 +34,7 @@ unsigned producir_dato()
    const unsigned dato_producido = siguiente_dato ;
    siguiente_dato++ ;
    cont_prod[dato_producido] ++ ;
-   cout << "producido: " << dato_producido << endl << flush ;
+   cout << "Dato producido: " << dato_producido << endl << flush ;
    return dato_producido ;
 }
 //----------------------------------------------------------------------
@@ -49,7 +45,7 @@ void consumir_dato( unsigned dato )
    cont_cons[dato] ++ ;
    this_thread::sleep_for( chrono::milliseconds( aleatorio<20,100>() ));
 
-   cout << "                  consumido: " << dato << endl ;
+   cout << "                     Dato consumido: " << dato << endl ;
 
 }
 
@@ -83,51 +79,48 @@ void  funcion_hebra_productora(  )
    {
       int dato = producir_dato() ;
       sem_wait(libres);
-      //insertar 'dato' en vector intermedio
-      vec_intermedio[primera_libre] = dato;
-      primera_libre = (primera_libre+1)%tam_vec;
+      buffer[primera_libre] = dato;
+      primera_libre = (primera_libre+1) % tam_vec;
       sem_signal(ocupadas);
    }
 }
-
-
 
 //----------------------------------------------------------------------
 
 void funcion_hebra_consumidora(  )
 {
+   //Solución LIFO
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
-       // Versión FIFO
-
-      int dato ;
+      int dato;
       sem_wait(ocupadas);
-      //extraer 'dato' del vector intermedio
-      dato = vec_intermedio[primera_ocupada];
-      primera_ocupada = (primera_ocupada+1)%tam_vec;
+      primera_libre--;
+      dato = buffer[primera_libre];
       sem_signal(libres);
       consumir_dato( dato ) ;
-
-
-/*
-      //Versión LIFO
-      int dato ;
-      sem_wait(ocupadas);
-      //extraer 'dato' del vector intermedio
-      primera_libre--;
-      dato = vec_intermedio[primera_libre];
-      sem_signal(libres);
-      consumir_dato( dato ) ; */
-
     }
 }
 
+void funcion_hebra_consumidoraFIFO(  )
+{
+    //Solución FIFO
+    for( unsigned i = 0 ; i < num_items ; i++ )
+    {
+        int dato;
+        sem_wait(ocupadas);
+        dato = buffer[primera_ocupada];
+        primera_ocupada = (primera_ocupada+1) % tam_vec;
+        sem_signal(libres);
+        consumir_dato( dato ) ;
+    }
+}
 //----------------------------------------------------------------------
 
 int main()
 {
    cout << "-----------------------------------------------------------------" << endl
-        << "Problema de los productores-consumidores (solución LIFO o FIFO ?)." << endl
+        << "Problema de los productores-consumidores únicos (solución LIFO)." << endl
+        << "Nº de items: " << num_items << endl
         << "------------------------------------------------------------------" << endl
         << flush ;
 
@@ -136,6 +129,8 @@ int main()
 
    hebra_productora.join() ;
    hebra_consumidora.join() ;
+
+   cout << "fin" << endl;
 
    test_contadores();
 }

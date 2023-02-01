@@ -4,16 +4,13 @@
 compilador:=g++
 opcionesc:= -std=c++11 -pthread -Wfatal-errors
 
-pcm: prodcons_mu_exe
+x: monitor_em_exe
 	./$<
 
-pcmFIFO: prodcons_mu_FIFO_exe
+pc1: prodcons1_su_exe
 	./$<
 
-fu: fumadores_exe
-	./$<
-
-le: lectoresEscritores_exe
+pc1fifo: prodcons1_su_fifo_exe
 	./$<
 
 %_exe: %.cpp scd.cpp scd.h

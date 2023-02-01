@@ -44,37 +44,37 @@ template< int min, int max > int aleatorio()
 
 void funcion_filosofos( int id )
 {
-  int id_ten1, //id tenedor 1
-      id_ten2, //id tenedor 2
+  int id_ten_izq, //id tenedor izquierdo
+      id_ten_der, //id tenedor derecho
       peticion;
 
   while ( true )
   {
       if (id < num_filosofos){
-          id_ten1 = (id+1) % num_procesos;
-          id_ten2 = (id+num_procesos-1) % num_procesos;
+          id_ten_izq = (id + 1) % num_procesos;
+          id_ten_der = (id + num_procesos - 1) % num_procesos;
       } else {
-          id_ten1 = (id+num_procesos-1) % num_procesos;
-          id_ten2 = (id+1) % num_procesos;
+          id_ten_izq = (id + num_procesos - 1) % num_procesos;
+          id_ten_der = (id + 1) % num_procesos;
       }
-    cout <<"Filósofo " <<id << " solicita ten. " <<id_ten1 <<endl;
+    cout << "Filósofo " << id << " solicita ten. izq. " << id_ten_izq << endl;
     //solicitar tenedor 1
-    MPI_Ssend(&peticion, 1, MPI_INT, id_ten1, 0, MPI_COMM_WORLD);
+    MPI_Ssend(&peticion, 1, MPI_INT, id_ten_izq, 0, MPI_COMM_WORLD);
 
-    cout <<"Filósofo " <<id <<" solicita ten. " <<id_ten2 <<endl;
+    cout << "Filósofo " << id << " solicita ten. der. " << id_ten_der << endl;
     //solicitar tenedor 2
-    MPI_Ssend(&peticion, 1, MPI_INT, id_ten2, 0, MPI_COMM_WORLD);
+    MPI_Ssend(&peticion, 1, MPI_INT, id_ten_der, 0, MPI_COMM_WORLD);
 
     cout <<"Filósofo " <<id <<" comienza a comer" <<endl ;
     sleep_for( milliseconds( aleatorio<10,100>() ) );
 
-    cout <<"Filósofo " <<id <<" suelta ten. " <<id_ten1 <<endl;
+    cout << "Filósofo " << id << " suelta ten. izq. " << id_ten_izq << endl;
     //soltar el tenedor 1
-    MPI_Ssend(&peticion, 1, MPI_INT, id_ten1, 0, MPI_COMM_WORLD);
+    MPI_Ssend(&peticion, 1, MPI_INT, id_ten_izq, 0, MPI_COMM_WORLD);
 
-    cout<< "Filósofo " <<id <<" suelta ten. " <<id_ten2 <<endl;
+    cout << "Filósofo " << id << " suelta ten. der. " << id_ten_der << endl;
     //soltar el tenedor 2
-    MPI_Ssend(&peticion, 1, MPI_INT, id_ten2, 0, MPI_COMM_WORLD);
+    MPI_Ssend(&peticion, 1, MPI_INT, id_ten_der, 0, MPI_COMM_WORLD);
 
     cout << "Filosofo " << id << " comienza a pensar" << endl;
     sleep_for( milliseconds( aleatorio<10,100>() ) );
@@ -93,9 +93,9 @@ void funcion_tenedores( int id )
      MPI_Recv(&valor, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
      id_filosofo = estado.MPI_SOURCE; //guardar en 'id_filosofo' el id. del emisor
      cout <<"Ten. " <<id <<" ha sido cogido por filo. " <<id_filosofo <<endl;
-     //recibir liberación de filósofo 'id_filosofo' (completar)
-      MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
-      cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
+     //recibir liberación de filósofo 'id_filosofo'
+     MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
+     cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
   }
 }
 // ---------------------------------------------------------------------

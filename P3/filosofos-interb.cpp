@@ -87,8 +87,8 @@ void funcion_tenedores( int id )
      id_filosofo = estado.MPI_SOURCE; //guardar en 'id_filosofo' el id. del emisor
      cout <<"Ten. " <<id <<" ha sido cogido por filo. " <<id_filosofo <<endl;
      //recibir liberación de filósofo 'id_filosofo'
-      MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
-      cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
+     MPI_Recv(&valor, 1, MPI_INT, id_filosofo, MPI_ANY_TAG, MPI_COMM_WORLD, &estado);
+     cout <<"Ten. "<< id<< " ha sido liberado por filo. " <<id_filosofo <<endl ;
   }
 }
 // ---------------------------------------------------------------------

@@ -3,11 +3,11 @@
 // Sistemas concurrentes y Distribuidos.
 // Práctica 2. Casos prácticos de monitores en C++11.
 //
-// Archivo: prodcons_mu.cpp
+// Archivo: prodcons_mu_FIFO.cpp
 //
 // Ejemplo de un monitor en C++11 con semántica SU, para el problema
 // del productor/consumidor, con productores y consumidores múltiples.
-// Opción LIFO
+// Opción FIFO
 //
 // Historial:
 // Creado el 30 Sept de 2022. (adaptado de prodcons2_su.cpp)
@@ -53,7 +53,7 @@ int producir_dato( unsigned numHebraProductora )
    const int valor_producido = siguiente_dato ;
    siguiente_dato ++ ;
    mtx.lock();
-   cout << "Dato " << valor_producido << " producido por hebra " << numHebraProductora << endl << flush ;
+    cout << "Dato " << valor_producido << " producido por hebra " << numHebraProductora << endl << flush ;
    mtx.unlock();
    cont_prod[valor_producido]++ ;
    return valor_producido ;
@@ -70,8 +70,8 @@ void consumir_dato( unsigned valor_consumir , unsigned numHebraConsumidora)
    cont_cons[valor_consumir] ++ ;
    this_thread::sleep_for( chrono::milliseconds( aleatorio<min_ms,max_ms>() ));
    mtx.lock();
-   cout << "                                 Dato " << valor_consumir
-        << " consumido por hebra " << numHebraConsumidora << endl ;   mtx.unlock();
+    cout << "                                 Dato " << valor_consumir
+         << " consumido por hebra " << numHebraConsumidora << endl ;   mtx.unlock();
 }
 //----------------------------------------------------------------------
 
@@ -107,7 +107,10 @@ class ProdConsMu : public HoareMonitor
    num_celdas_total = 10;   //   núm. de entradas del buffer
  int                        // variables permanentes
    buffer[num_celdas_total],//   buffer de tamaño fijo, con los datos
-   primera_libre;           //   índice de celda de la próxima inserción ( == número de celdas ocupadas)
+   primera_libre,           //   índice de celda de la próxima inserción
+   primera_ocupada,         // índice de la primera celda ocupada
+   celdasOcupadas;          // Número de celdas ocupadas del buffer
+
  CondVar                    // colas condición:
    ocupadas,                //  cola donde espera el consumidor (n>0)
    libres ;                 //  cola donde espera el productor (n<num_celdas_total)
@@ -122,24 +125,26 @@ class ProdConsMu : public HoareMonitor
 ProdConsMu::ProdConsMu(  )
 {
    primera_libre = 0 ;
+   primera_ocupada = 0;
+   celdasOcupadas = 0;
    ocupadas      = newCondVar();
    libres        = newCondVar();
 }
-
 // -----------------------------------------------------------------------------
 // función llamada por el productor para insertar un dato
 void ProdConsMu::escribir(int valor )
 {
     // esperar bloqueado hasta que primera_libre < num_celdas_total
-    if ( primera_libre == num_celdas_total )
+    if (celdasOcupadas == num_celdas_total )
         libres.wait();
 
     //cout << "leer: ocup == " << primera_libre << ", total == " << num_celdas_total << endl ;
-    assert( primera_libre < num_celdas_total );
+    assert(celdasOcupadas < num_celdas_total );
 
     // hacer la operación de inserción, actualizando estado del monitor
     buffer[primera_libre] = valor ;
-    primera_libre++;
+    primera_libre = (primera_libre+1)%num_celdas_total ;
+    celdasOcupadas++;
 
     // señalar al consumidor que ya hay una celda ocupada (por si está esperando)
     ocupadas.signal();
@@ -149,15 +154,16 @@ void ProdConsMu::escribir(int valor )
 int ProdConsMu::leer(  )
 {
    // esperar bloqueado hasta que 0 < primera_libre
-   if ( primera_libre == 0 )
+   if (celdasOcupadas == 0 )
       ocupadas.wait();
 
    //cout << "leer: ocup == " << primera_libre << ", total == " << num_celdas_total << endl ;
-   assert( 0 < primera_libre  );
+   assert(0 < celdasOcupadas  );
 
    // hacer la operación de lectura, actualizando estado del monitor
-   primera_libre-- ;
-   const int valor = buffer[primera_libre] ;
+   celdasOcupadas-- ;
+   const int valor = buffer[primera_ocupada] ;
+   primera_ocupada = (primera_ocupada+1)%num_celdas_total;
 
    // señalar al productor que hay un hueco libre, por si está esperando
    libres.signal();
@@ -203,7 +209,7 @@ void funcion_hebra_consumidora(MRef<ProdConsMu>  monitor , unsigned numHebra)
 int main()
 {
    cout << "--------------------------------------------------------------------" << endl
-        << "Problema del productor-consumidor múltiples (Monitor SU, buffer LIFO). " << endl
+        << "Problema del productor-consumidor múltiples (Monitor SU, buffer FIFO). " << endl
         << "Productores: " << numProductores << "   Consumidores: " << numConsumidores <<
         "       Nº de items: " << num_items << endl
         << "--------------------------------------------------------------------" << endl

@@ -7,34 +7,8 @@
 using namespace std ;
 using namespace scd ;
 
-// numero de fumadores 
-
+// número de fumadores
 const int num_fumadores = 3 ;
-
-//-------------------------------------------------------------------------
-// Función que simula la acción de producir un ingrediente, como un retardo
-// aleatorio de la hebra (devuelve número de ingrediente producido)
-
-int producir_ingrediente()
-{
-   // calcular milisegundos aleatorios de duración de la acción de fumar)
-   chrono::milliseconds duracionProduciendo(aleatorio<10,100>() );
-
-   //Número de ingrediente a producir (elegido aleatoriamente)
-   const int num_ingrediente = aleatorio<0,num_fumadores-1>() ;
-
-   // informa de que comienza a producir
-   cout << "Estanquero : empieza a producir ingrediente " << num_ingrediente <<
-        " (" << duracionProduciendo.count() << " milisegundos)" << endl;
-
-   // espera bloqueada un tiempo igual a ''duracionProduciendo' milisegundos
-   this_thread::sleep_for(duracionProduciendo );
-
-   // informa de que ha terminado de producir
-   cout << "Estanquero : termina de producir ingrediente " << num_ingrediente << endl;
-
-   return num_ingrediente ;
-}
 
 // *****************************************************************************
 // clase para monitor Estanco
@@ -42,12 +16,12 @@ int producir_ingrediente()
 class Estanco : public HoareMonitor
 {
 private:
-int                             //variables permanentes
-    mostrador;                 // -1 si está libre
+    int                             //variables permanentes
+    mostrador;                 // -1 si está libre / i{0,1,2} si está el ingr. i en el mostrador
 
-CondVar                        // colas condicion:
-    mostr_vacio,               // cola donde espera el fumador si el mostrador está vacío
-    ingr_disp[num_fumadores];  // cola donde esperan los fumadores a recoger el ingrediente i
+    CondVar                        // colas condición:
+    estanquero,               // cola donde espera el estanquero si el mostrador está vacío
+    fumadores[num_fumadores];  // cola donde esperan los fumadores a recoger el ingrediente i
 
 public:                    // constructor y métodos públicos
     Estanco() ;             // constructor
@@ -58,26 +32,29 @@ public:                    // constructor y métodos públicos
 // -----------------------------------------------------------------------------
 
 Estanco::Estanco() {
-    assert(num_fumadores == 3);
     mostrador = -1;
-    mostr_vacio   = newCondVar();
+    estanquero   = newCondVar();
     //Inicializar cada posición del array de cola
     for (int i = 0; i<num_fumadores; i++)
-        ingr_disp[i] = newCondVar();
+        fumadores[i] = newCondVar();
 }
 
 void Estanco::ponerIngrediente(int ingrediente) {
+    //Imprimimos por consola la información
+    cout << "El ingrediente " << ingrediente << " se ha puesto en el mostrador "
+         << "para ser recogido." << endl;
+
     //Ponemos en el mostrador el ingrediente
     mostrador = ingrediente;
 
-    //Indicamos a la cola ingr_disp que hay un ingrediente disponible
-    ingr_disp[ingrediente].signal();
+    //Indicamos a la cola fumadores que hay un ingrediente disponible
+    fumadores[ingrediente].signal();
 }
 
 void Estanco::esperarRecogidaIngrediente() {
-    //Si el mostrador no está vacío, hacemos esperar en la cola mostr_vacio
+    //Si el mostrador no está vacío, hacemos esperar en la cola estanquero
     if (mostrador != -1)
-        mostr_vacio.wait();
+        estanquero.wait();
 }
 
 void Estanco::obtenerIngrediente(int ingrediente) {
@@ -86,21 +63,48 @@ void Estanco::obtenerIngrediente(int ingrediente) {
 
     //Comprobamos si el mostrador tiene el ingrediente indicado
     if (mostrador != ingrediente)
-        ingr_disp[ingrediente].wait();
+        fumadores[ingrediente].wait();
+
+    //Imprimimos por consola la información
+    cout << "El ingrediente " << ingrediente << " ha sido recogido." << endl;
 
     //Indicamos que el mostrador vuelve a estar vacío
     mostrador = -1;
 
-    //Indicamos a la cola que el mostrador se ha quedado vacío
-    mostr_vacio.signal();
+    //Indicamos al estanquero que el mostrador se ha quedado vacío
+    estanquero.signal();
 }
 
 //-------------------------------------------------------------------------
-// Función que simula la acción de fumar, como un retardo aleatoria de la hebra
+// Función que simula la acción de producir un ingrediente, como un retardo
+// aleatorio de la hebra (devuelve número de ingrediente producido)
+
+int producir_ingrediente()
+{
+    // calcular milisegundos aleatorios de duración de la acción de fumar)
+    chrono::milliseconds duracionProduciendo(aleatorio<10,100>() );
+
+    //Número de ingrediente a producir (elegido aleatoriamente)
+    const int num_ingrediente = aleatorio<0,num_fumadores-1>() ;
+
+    // informa de que comienza a producir
+    cout << "Estanquero : empieza a producir ingrediente " << num_ingrediente <<
+         " (" << duracionProduciendo.count() << " milisegundos)" << endl;
+
+    // espera bloqueada un tiempo igual a ''duracionProduciendo' milisegundos
+    this_thread::sleep_for(duracionProduciendo );
+
+    // informa de que ha terminado de producir
+    cout << "Estanquero : termina de producir ingrediente " << num_ingrediente << endl;
+
+    return num_ingrediente ;
+}
+
+//-------------------------------------------------------------------------
+// Función que simula la acción de fumar, como un retardo aleatorio de la hebra
 
 void fumar(int num_fumador )
 {
-    assert(0 <= num_fumador && num_fumador < num_fumadores);
    // calcular milisegundos aleatorios de duración de la acción de fumar)
    chrono::milliseconds duracion_fumar( aleatorio<20,200>() );
 
@@ -120,9 +124,8 @@ void fumar(int num_fumador )
 
 void funcion_hebra_estanquero( MRef<Estanco>  monitor )
 {
-    int ingrediente;
     while(true){
-        ingrediente = producir_ingrediente();
+        int ingrediente = producir_ingrediente();
         monitor->ponerIngrediente(ingrediente);
         monitor->esperarRecogidaIngrediente();
     }
@@ -144,11 +147,11 @@ void  funcion_hebra_fumador(MRef<Estanco>  monitor, int num_fumador )
 int main()
 {
     cout << "--------------------------------------------------------------------" << endl
-         << "Problema de los fumadores (Monitor Estanco). " << endl
+         << "Problema de los fumadores (Monitor SU Estanco). " << endl
          << "--------------------------------------------------------------------" << endl
          << flush ;
 
-    // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
+    // crear monitor ('monitor' es una referencia al mismo, de tipo MRef<...>)
     MRef<Estanco> monitor = Create<Estanco>() ;
 
     //Crear y lanzar las hebras

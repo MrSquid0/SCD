@@ -108,11 +108,11 @@ void funcion_buffer()
       // 1. determinar si puede enviar solo prod., solo cons, o todos
 
       if ( num_celdas_ocupadas == 0 )               // si buffer vacío
-         id_emisor_aceptable = id_productor ;       // $~~~$ solo prod.
+         id_emisor_aceptable = id_productor ;       // solo prod.
       else if ( num_celdas_ocupadas == tam_vector ) // si buffer lleno
-         id_emisor_aceptable = id_consumidor ;      // $~~~$ solo cons.
+         id_emisor_aceptable = id_consumidor ;      // solo cons.
       else                                          // si no vacío ni lleno
-         id_emisor_aceptable = MPI_ANY_SOURCE ;     // $~~~$ cualquiera
+         id_emisor_aceptable = MPI_ANY_SOURCE ;     // cualquiera
 
       // 2. recibir un mensaje del emisor o emisores aceptables
 

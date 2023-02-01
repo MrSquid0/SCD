@@ -7,9 +7,6 @@ flagsc     := -std=c++11 -g -Wall
 pc: prodcons_mpi_exe
 	mpirun -oversubscribe -np  3 ./$<
 
-pca: prodcons-alt_mpi_exe
-	mpirun -oversubscribe  -np  3 ./$<
-
 pc2: prodcons2_mpi_exe
 	mpirun -oversubscribe  -np  3 ./$<
 
@@ -26,9 +23,6 @@ f: filosofos_mpi_exe
 	mpirun -oversubscribe  -np 10 ./$<
 
 fc: filosofos-cam_mpi_exe
-	mpirun -oversubscribe  -np 11 ./$<
-
-fm: filosofos-malafolla_mpi_exe
 	mpirun -oversubscribe  -np 11 ./$<
 
 %_mpi_exe: %.cpp
