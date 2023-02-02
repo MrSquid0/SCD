@@ -13,16 +13,17 @@ const unsigned
    num_items = 40 ,   // número de items
    tam_vec   = 10 ,   // tamaño del buffer
    numProductores = 5, //debe ser divisible a num_items
-   numConsumidores = 8; //debe ser divisible a num_items
+   numConsumidores = 8, //debe ser divisible a num_items
+   itemsPorHebraProductora = num_items / numProductores,
+   itemsPorHebraConsumidora = num_items / numConsumidores;
 
 unsigned
    cont_prod[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha producido.
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
-   siguiente_dato       = 0 ,  // siguiente dato a producir en 'producir_dato' (solo se usa ahí)
    primera_libre = 0, //Celda a insertar en el buffer (LIFO y FIFO)
    primera_ocupada = 0, //Celda a extraer del buffer (FIFO)
    buffer[tam_vec], //Buffer intermedio por donde se pasan los datos
-   contadorHebrasProductoras[numProductores] = {0}; //Contador de items producidos por cada hebra productora
+   contadorItemsProductor[numProductores]{0}; //Contador de número de items producidos por cada hebra productora
 
 Semaphore
     libres = tam_vec, //Indica las celdas libres del buffer
@@ -33,17 +34,14 @@ Semaphore
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
 //----------------------------------------------------------------------
-
 unsigned producir_dato(unsigned numHebraProductora)
 {
    this_thread::sleep_for( chrono::milliseconds( aleatorio<20,100>() ));
-   const unsigned dato_producido = siguiente_dato ;
-   siguiente_dato++ ;
+   //Asignamos a cada hebra productora la producción consecutiva de items
+   const unsigned dato_producido = (numHebraProductora * itemsPorHebraProductora) + contadorItemsProductor[numHebraProductora];
+   contadorItemsProductor[numHebraProductora]++;
    cont_prod[dato_producido] ++ ;
-   contadorHebrasProductoras[numHebraProductora] ++ ; //Sumamos 1 dato producido por la hebra actual
    cout << "Dato " << dato_producido << " producido por hebra " << numHebraProductora << endl << flush ;
-   cout << "La hebra " << numHebraProductora << " lleva producido " << contadorHebrasProductoras[numHebraProductora] << " items." << endl << flush;
-
    return dato_producido ;
 }
 //----------------------------------------------------------------------
@@ -83,16 +81,8 @@ void test_contadores()
 
 void  funcion_hebra_productora( int numHebra )
 {
-    unsigned itemsPorHebra = num_items / numProductores;
-
-    //Condicional en caso de que el número de productores no sea
-    //divisible por el número de items
-    if (numHebra == numProductores - 1){
-        itemsPorHebra = num_items - (itemsPorHebra*(numProductores-1));
-    }
-
     //Solución válida para FIFO y LIFO
-   for( unsigned i = 0 ; i < itemsPorHebra ; i++ )
+   for(unsigned i = 0 ; i < itemsPorHebraProductora ; i++ )
    {
       unsigned dato = producir_dato(numHebra);
       sem_wait(libres);
@@ -108,16 +98,8 @@ void  funcion_hebra_productora( int numHebra )
 
 void funcion_hebra_consumidora( int numHebra )
 {
-    unsigned itemsPorHebra = num_items / numConsumidores;
-
-    //Condicional en caso de que el número de consumidores no sea
-    //divisible por el número de items
-    if (numHebra == numConsumidores - 1){
-        itemsPorHebra = num_items - (itemsPorHebra*(numConsumidores-1));
-    }
-
    //Solución LIFO
-   for( unsigned i = 0 ; i < itemsPorHebra ; i++ )
+   for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
    {
       int dato;
       sem_wait(ocupadas);
@@ -132,16 +114,8 @@ void funcion_hebra_consumidora( int numHebra )
 
 void funcion_hebra_consumidoraFIFO( int numHebra )
 {
-    unsigned itemsPorHebra = num_items / numConsumidores;
-
-    //Condicional en caso de que el número de consumidores no sea
-    //divisible por el número de items
-    if (numHebra == numConsumidores - 1){
-        itemsPorHebra = num_items - (itemsPorHebra * (numConsumidores-1));
-    }
-
     //Solución FIFO
-    for( unsigned i = 0 ; i < itemsPorHebra ; i++ )
+    for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
     {
         int dato;
         sem_wait(ocupadas);
@@ -183,9 +157,4 @@ int main()
         hebra_consumidora[i].join();
     }
    test_contadores();
-
-    //Imprimir por consola el número de items producidos por cada hebra
-    for(int i=0; i<numProductores; i++){
-        cout << "Items producidos por la hebra " << i << " --> " << contadorHebrasProductoras[i] << "." << endl;
-    }
 }

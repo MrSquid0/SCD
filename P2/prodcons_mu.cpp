@@ -41,23 +41,28 @@ mutex
    mtx ;                 // mutex de escritura en pantalla
 unsigned
    cont_prod[num_items] = {0}, // contadores de verificación: producidos
-   cont_cons[num_items] = {0}; // contadores de verificación: consumidos
+   cont_cons[num_items] = {0}, // contadores de verificación: consumidos
+   itemsPorHebraProductora = num_items / numProductores, //Número de items que producen cada hebra productora
+   itemsPorHebraConsumidora = num_items / numConsumidores, //Número de items que consumen cada hebra consumidora
+   contadorItemsProductor[numProductores]{0}; //Contador de número de items producidos por cada hebra productora
 
 //**********************************************************************
 // funciones comunes a las dos soluciones (fifo y lifo)
 //----------------------------------------------------------------------
 
-int producir_dato( unsigned numHebraProductora )
+unsigned producir_dato( unsigned numHebraProductora )
 {
    this_thread::sleep_for( chrono::milliseconds( aleatorio<min_ms,max_ms>() ));
-   const int valor_producido = siguiente_dato ;
-   siguiente_dato ++ ;
+   //Asignamos a cada hebra productora la producción consecutiva de items
+   const unsigned dato_producido = (numHebraProductora * itemsPorHebraProductora) + contadorItemsProductor[numHebraProductora];
+   contadorItemsProductor[numHebraProductora]++;
    mtx.lock();
-   cout << "Dato " << valor_producido << " producido por hebra " << numHebraProductora << endl << flush ;
+   cout << "Dato " << dato_producido << " producido por hebra " << numHebraProductora << endl << flush ;
    mtx.unlock();
-   cont_prod[valor_producido]++ ;
-   return valor_producido ;
+   cont_prod[dato_producido]++ ;
+   return dato_producido ;
 }
+
 //----------------------------------------------------------------------
 
 void consumir_dato( unsigned valor_consumir , unsigned numHebraConsumidora)
@@ -170,13 +175,8 @@ int ProdConsMu::leer(  )
 
 void funcion_hebra_productora(MRef<ProdConsMu> monitor , unsigned numHebra )
 {
-    unsigned itemsPorHebra = num_items / numProductores;
 
-    if (numHebra == numProductores - 1){
-        itemsPorHebra = num_items - (itemsPorHebra * (numProductores-1));
-    }
-
-   for( unsigned i = 0 ; i < itemsPorHebra ; i++ )
+   for( unsigned i = 0 ; i < itemsPorHebraProductora ; i++ )
    {
       int valor = producir_dato( numHebra ) ;
       monitor->escribir( valor );
@@ -186,13 +186,8 @@ void funcion_hebra_productora(MRef<ProdConsMu> monitor , unsigned numHebra )
 
 void funcion_hebra_consumidora(MRef<ProdConsMu>  monitor , unsigned numHebra)
 {
-    unsigned itemsPorHebra = num_items / numConsumidores;
 
-    if (numHebra == numConsumidores - 1){
-        itemsPorHebra = num_items - (itemsPorHebra * (numConsumidores-1));
-    }
-
-   for( unsigned i = 0 ; i < itemsPorHebra ; i++ )
+   for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
    {
       int valor = monitor->leer();
       consumir_dato( valor , numHebra) ;
@@ -209,7 +204,7 @@ int main()
         << "--------------------------------------------------------------------" << endl
         << flush ;
 
-   // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
+   // crear monitor ('monitor' es una referencia al mismo, de tipo MRef<...>)
    MRef<ProdConsMu> monitor = Create<ProdConsMu>() ;
 
    // crear y lanzar las hebras
