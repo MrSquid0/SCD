@@ -31,16 +31,14 @@ const unsigned
     numConsumidores = 3,  //debe ser divisible a num_items
     itemsPorHebraProductora = num_items / numProductores,
     itemsPorHebraConsumidora = num_items / numConsumidores;
-int
-   siguiente_dato = 0 ; // siguiente valor a devolver en 'producir_dato'
 
 constexpr int
    min_ms    = 5,     // tiempo mínimo de espera en sleep_for
    max_ms    = 20 ;   // tiempo máximo de espera en sleep_for
 
-
 mutex
    mtx ;                 // mutex de escritura en pantalla
+
 unsigned
    cont_prod[num_items] = {0}, // contadores de verificación: producidos
    cont_cons[num_items] = {0}, // contadores de verificación: consumidos
