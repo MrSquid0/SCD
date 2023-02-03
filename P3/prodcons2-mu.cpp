@@ -46,12 +46,13 @@ template< int min, int max > int aleatorio()
 // ---------------------------------------------------------------------
 // producir produce los numeros en secuencia (1,2,3,....)
 // y lleva espera aleatorio
-int producir(int n)
+int producir(int numOrdenProductor)
 {
-   static int contador = num_items / numProductores * n ;
+   static const int cadaProductor = num_items / numProductores ; //cuánto produce cada productor
+   static int contador = numOrdenProductor * cadaProductor;
    sleep_for( milliseconds( aleatorio<10,100>()) );
    contador++ ;
-   cout << "Productor " << n << " ha producido valor " << contador << endl << flush;
+   cout << "Productor " << numOrdenProductor << " ha producido valor " << contador << endl << flush;
    return contador ;
 }
 // ---------------------------------------------------------------------
