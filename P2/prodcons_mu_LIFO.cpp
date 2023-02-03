@@ -3,7 +3,7 @@
 // Sistemas concurrentes y Distribuidos.
 // Práctica 2. Casos prácticos de monitores en C++11.
 //
-// Archivo: prodcons_mu.cpp
+// Archivo: prodcons_mu_LIFO.cpp
 //
 // Ejemplo de un monitor en C++11 con semántica SU, para el problema
 // del productor/consumidor, con productores y consumidores múltiples.
@@ -103,7 +103,7 @@ void test_contadores()
 // *****************************************************************************
 // clase para monitor buffer, version FIFO, semántica SC, multiples prod/cons
 
-class ProdConsMu : public HoareMonitor
+class ProdCons : public HoareMonitor
 {
  private:
  static const int           // constantes ('static', ya que no dependen de la instancia)
@@ -112,17 +112,17 @@ class ProdConsMu : public HoareMonitor
    buffer[num_celdas_total],//   buffer de tamaño fijo, con los datos
    primera_libre;           //   índice de celda de la próxima inserción ( == número de celdas ocupadas)
  CondVar                    // colas condición:
-   ocupadas,                //  cola donde espera el consumidor (n>0)
-   libres ;                 //  cola donde espera el productor (n<num_celdas_total)
+   ocupadas,                //  cola donde espera el consumidor (entradasOcupadas>0)
+   libres ;                 //  cola donde espera el productor (entradasOcupadas<num_celdas_total)
 
  public:                       // constructor y métodos públicos
-   ProdConsMu() ;
+   ProdCons() ;
    int  leer();                // extraer un valor (sentencia L) (consumidor)
    void escribir( int valor ); // insertar un valor (sentencia E) (productor)
 } ;
 // -----------------------------------------------------------------------------
 
-ProdConsMu::ProdConsMu(  )
+ProdCons::ProdCons(  )
 {
    primera_libre = 0 ;
    ocupadas      = newCondVar();
@@ -131,7 +131,7 @@ ProdConsMu::ProdConsMu(  )
 
 // -----------------------------------------------------------------------------
 // función llamada por el productor para insertar un dato
-void ProdConsMu::escribir(int valor )
+void ProdCons::escribir(int valor )
 {
     // esperar bloqueado hasta que primera_libre < num_celdas_total
     if ( primera_libre == num_celdas_total )
@@ -149,7 +149,7 @@ void ProdConsMu::escribir(int valor )
 }
 // -----------------------------------------------------------------------------
 // función llamada por el consumidor para extraer un dato
-int ProdConsMu::leer(  )
+int ProdCons::leer(  )
 {
    // esperar bloqueado hasta que 0 < primera_libre
    if ( primera_libre == 0 )
@@ -171,18 +171,18 @@ int ProdConsMu::leer(  )
 // *****************************************************************************
 // funciones de hebras
 
-void funcion_hebra_productora(MRef<ProdConsMu> monitor , unsigned numHebra )
+void funcion_hebra_productora(MRef<ProdCons> monitor , unsigned numHebra )
 {
 
    for( unsigned i = 0 ; i < itemsPorHebraProductora ; i++ )
    {
-      int valor = producir_dato( numHebra ) ;
+      unsigned valor = producir_dato( numHebra ) ;
       monitor->escribir( valor );
    }
 }
 // -----------------------------------------------------------------------------
 
-void funcion_hebra_consumidora(MRef<ProdConsMu>  monitor , unsigned numHebra)
+void funcion_hebra_consumidora(MRef<ProdCons>  monitor , unsigned numHebra)
 {
 
    for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
@@ -203,7 +203,7 @@ int main()
         << flush ;
 
    // crear monitor ('monitor' es una referencia al mismo, de tipo MRef<...>)
-   MRef<ProdConsMu> monitor = Create<ProdConsMu>() ;
+   MRef<ProdCons> monitor = Create<ProdCons>() ;
 
    // crear y lanzar las hebras
    thread hebra_prod[numProductores],

@@ -3,7 +3,7 @@
 // Sistemas concurrentes y Distribuidos.
 // Seminario2 2. Introducción a los monitores en C++11.
 //
-// Archivo: prodcons1_su.cpp
+// Archivo: prodcons1_su_LIFO.cpp
 //
 // Ejemplo de un monitor en C++11 con semántica SU, para el problema
 // del productor/consumidor, con productor y consumidor únicos.
@@ -97,7 +97,7 @@ void test_contadores()
 // *****************************************************************************
 // clase para monitor buffer, version FIFO, semántica SC, multiples prod/cons
 
-class ProdConsMu : public HoareMonitor
+class ProdCons : public HoareMonitor
 {
  private:
  static const int           // constantes ('static', ya que no dependen de la instancia)
@@ -107,17 +107,17 @@ class ProdConsMu : public HoareMonitor
    primera_libre;           //   indice de celda de la próxima inserción ( == número de celdas ocupadas)
 
  CondVar                    // colas condicion:
-   ocupadas,                //  cola donde espera el consumidor (n>0)
-   libres ;                 //  cola donde espera el productor  (n<num_celdas_total)
+   ocupadas,                //  cola donde espera el consumidor (entradasOcupadas>0)
+   libres ;                 //  cola donde espera el productor (entradasOcupadas<num_celdas_total)
 
  public:                    // constructor y métodos públicos
-   ProdConsMu() ;             // constructor
+   ProdCons() ;             // constructor
    int  leer();                // extraer un valor (sentencia L) (consumidor)
    void escribir( int valor ); // insertar un valor (sentencia E) (productor)
 } ;
 // -----------------------------------------------------------------------------
 
-ProdConsMu::ProdConsMu(  )
+ProdCons::ProdCons(  )
 {
    primera_libre = 0 ;
    ocupadas      = newCondVar();
@@ -126,7 +126,7 @@ ProdConsMu::ProdConsMu(  )
 // -----------------------------------------------------------------------------
 // función llamada por el consumidor para extraer un dato
 
-int ProdConsMu::leer(  )
+int ProdCons::leer(  )
 {
     // esperar bloqueado hasta que 0 < primera_libre
     if ( primera_libre == 0 )
@@ -138,10 +138,15 @@ int ProdConsMu::leer(  )
     // hacer la operación de lectura, actualizando estado del monitor
     primera_libre-- ;
     const int valor = buffer[primera_libre] ;
+
+    // señalar al productor que hay un hueco libre, por si está esperando
+    libres.signal();
+
+    return valor;
 }
 // -----------------------------------------------------------------------------
 
-void ProdConsMu::escribir(int valor )
+void ProdCons::escribir(int valor )
 {
     if ( primera_libre == num_celdas_total )
         libres.wait();
@@ -152,11 +157,14 @@ void ProdConsMu::escribir(int valor )
     // hacer la operación de inserción, actualizando estado del monitor
     buffer[primera_libre] = valor ;
     primera_libre++ ;
+
+    // señalar al consumidor que ya hay una celda ocupada (por si está esperando)
+    ocupadas.signal();
 }
 // *****************************************************************************
 // funciones de hebras
 
-void funcion_hebra_productora( MRef<ProdConsMu> monitor )
+void funcion_hebra_productora( MRef<ProdCons> monitor )
 {
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
@@ -166,7 +174,7 @@ void funcion_hebra_productora( MRef<ProdConsMu> monitor )
 }
 // -----------------------------------------------------------------------------
 
-void funcion_hebra_consumidora( MRef<ProdConsMu>  monitor )
+void funcion_hebra_consumidora( MRef<ProdCons>  monitor )
 {
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
@@ -178,13 +186,14 @@ void funcion_hebra_consumidora( MRef<ProdConsMu>  monitor )
 
 int main()
 {
-   cout << "--------------------------------------------------------------------" << endl
-        << "Problema del productor-consumidor únicos (Monitor SU, buffer LIFO). " << endl
-        << "--------------------------------------------------------------------" << endl
-        << flush ;
+    cout << "--------------------------------------------------------------------" << endl
+         << "Problema del productor-consumidor únicos (Monitor SU, buffer LIFO). " << endl
+         << "                      Nº de items: " << num_items << endl
+         << "--------------------------------------------------------------------" << endl
+         << flush ;
 
    // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
-   MRef<ProdConsMu> monitor = Create<ProdConsMu>() ;
+   MRef<ProdCons> monitor = Create<ProdCons>() ;
 
    // crear y lanzar las hebras
    thread hebra_prod( funcion_hebra_productora, monitor ),

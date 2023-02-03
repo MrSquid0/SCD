@@ -97,51 +97,51 @@ void test_contadores()
 // *****************************************************************************
 // clase para monitor buffer, version FIFO, semántica SC, multiples prod/cons
 
-class ProdConsMu : public HoareMonitor
+class ProdCons : public HoareMonitor
 {
  private:
  static const int           // constantes ('static', ya que no dependen de la instancia)
    num_celdas_total = 10;   //   núm. de entradas del buffer
  int                        // variables permanentes
    buffer[num_celdas_total],//   buffer de tamaño fijo, con los datos
-   primera_libre,           //   indice de celda de la próxima inserción ( == número de celdas ocupadas)
-   primera_ocupada,         // índice de celda de la próxima extracción (solo necesaria en tipo FIFO)
-   n;                       // num. de entradas al buffer ocupadas (solo necesaria en tipo FIFO)
+   primera_libre,           //   índice de celda de la próxima inserción
+   primera_ocupada,         // índice de celda de la próxima extracción
+   entradasOcupadas;        // num. de entradas al buffer ocupadas
 
  CondVar                    // colas condición:
-   ocupadas,                //  cola donde espera el consumidor (n>0)
-   libres ;                 //  cola donde espera el productor  (n<num_celdas_total)
+   ocupadas,                //  cola donde espera el consumidor (entradasOcupadas>0)
+   libres ;                 //  cola donde espera el productor (entradasOcupadas<num_celdas_total)
 
  public:                    // constructor y métodos públicos
-   ProdConsMu() ;             // constructor
+   ProdCons() ;             // constructor
    int  leer();                // extraer un valor (sentencia L) (consumidor)
    void escribir( int valor ); // insertar un valor (sentencia E) (productor)
 } ;
 // -----------------------------------------------------------------------------
 
-ProdConsMu::ProdConsMu(  )
+ProdCons::ProdCons(  )
 {
    primera_libre = 0 ;
    primera_ocupada = 0;
-   n = 0;
+   entradasOcupadas = 0;
    ocupadas      = newCondVar();
    libres        = newCondVar();
 }
 // -----------------------------------------------------------------------------
 // función llamada por el consumidor para extraer un dato
 
-int ProdConsMu::leer(  )
+int ProdCons::leer(  )
 {
-   // esperar bloqueado hasta que 0 < n
-   if ( n == 0)
+   // esperar bloqueado hasta que 0 < entradasOcupadas
+   if (entradasOcupadas == 0)
       ocupadas.wait();
 
-   assert( 0 < n  );
+   assert(0 < entradasOcupadas  );
 
    // hacer la operación de lectura, actualizando estado del monitor
    const int valor = buffer[primera_ocupada] ;
    primera_ocupada = (primera_ocupada+1)%num_celdas_total;
-   n--;
+   entradasOcupadas--;
    
    // señalar al productor que hay un hueco libre, por si está esperando
    libres.signal();
@@ -151,26 +151,26 @@ int ProdConsMu::leer(  )
 }
 // -----------------------------------------------------------------------------
 
-void ProdConsMu::escribir(int valor )
+void ProdCons::escribir(int valor )
 {
-   // esperar bloqueado hasta que n < num_celdas_total
-   if ( n == num_celdas_total )
+   // esperar bloqueado hasta que entradasOcupadas < num_celdas_total
+   if (entradasOcupadas == num_celdas_total )
       libres.wait();
 
-   assert( n < num_celdas_total );
+   assert(entradasOcupadas < num_celdas_total );
 
    // hacer la operación de inserción, actualizando estado del monitor
    buffer[primera_libre] = valor ;
    primera_libre = (primera_libre+1)%num_celdas_total;
-   n++;
+   entradasOcupadas++;
 
-   // señalar al consumidor que ya hay una celda ocupada (por si esta esperando)
+   // señalar al consumidor que ya hay una celda ocupada (por si está esperando)
    ocupadas.signal();
 }
 // *****************************************************************************
 // funciones de hebras
 
-void funcion_hebra_productora( MRef<ProdConsMu> monitor )
+void funcion_hebra_productora( MRef<ProdCons> monitor )
 {
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
@@ -180,7 +180,7 @@ void funcion_hebra_productora( MRef<ProdConsMu> monitor )
 }
 // -----------------------------------------------------------------------------
 
-void funcion_hebra_consumidora( MRef<ProdConsMu>  monitor )
+void funcion_hebra_consumidora( MRef<ProdCons>  monitor )
 {
    for( unsigned i = 0 ; i < num_items ; i++ )
    {
@@ -192,13 +192,14 @@ void funcion_hebra_consumidora( MRef<ProdConsMu>  monitor )
 
 int main()
 {
-   cout << "--------------------------------------------------------------------" << endl
-        << "Problema del productor-consumidor únicos (Monitor SU, buffer FIFO). " << endl
-        << "--------------------------------------------------------------------" << endl
-        << flush ;
+    cout << "--------------------------------------------------------------------" << endl
+         << "Problema del productor-consumidor únicos (Monitor SU, buffer FIFO). " << endl
+         << "                      Nº de items: " << num_items << endl
+         << "--------------------------------------------------------------------" << endl
+         << flush ;
 
    // crear monitor  ('monitor' es una referencia al mismo, de tipo MRef<...>)
-   MRef<ProdConsMu> monitor = Create<ProdConsMu>() ;
+   MRef<ProdCons> monitor = Create<ProdCons>() ;
 
    // crear y lanzar las hebras
    thread hebra_prod( funcion_hebra_productora, monitor ),

@@ -7,10 +7,10 @@ opcionesc:= -std=c++11 -pthread -Wfatal-errors
 x: monitor_em_exe
 	./$<
 
-pc1: prodcons1_su_exe
+pclifo: prodcons1_su_LIFO_exe
 	./$<
 
-pc1fifo: prodcons1_su_fifo_exe
+pcfifo: prodcons1_su_FIFO_exe
 	./$<
 
 %_exe: %.cpp scd.cpp scd.h

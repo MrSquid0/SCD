@@ -4,13 +4,19 @@
 
 compilador:=g++
 
-pc: prodcons_exe
+pclifo: prodcons-LIFO_exe
+	./$<
+
+pcfifo: prodcons-FIFO_exe
 	./$<
 
 fu: fumadores_exe
 	./$<
 
-pcm: prodcons-multi_exe
+pcmlifo: prodcons-multi-LIFO_exe
+	./$<
+
+pcmfifo: prodcons-multi-FIFO_exe
 	./$<
 
 ## esto solo se usa para probar que la plantilla compila

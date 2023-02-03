@@ -4,10 +4,10 @@
 compilador:=g++
 opcionesc:= -std=c++11 -pthread -Wfatal-errors
 
-pcm: prodcons_mu_exe
+pcmlifo: prodcons_mu_LIFO_exe
 	./$<
 
-pcmFIFO: prodcons_mu_FIFO_exe
+pcmfifo: prodcons_mu_FIFO_exe
 	./$<
 
 fu: fumadores_exe

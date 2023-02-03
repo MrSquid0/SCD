@@ -20,8 +20,8 @@ const unsigned
 unsigned
    cont_prod[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha producido.
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
-   primera_libre = 0, //Celda a insertar en el buffer (LIFO y FIFO)
-   primera_ocupada = 0, //Celda a extraer del buffer (FIFO)
+   primera_libre = 0, //Celda a insertar en el buffer
+   primera_ocupada = 0, //Celda a extraer del buffer
    buffer[tam_vec], //Buffer intermedio por donde se pasan los datos
    contadorItemsProductor[numProductores]{0}; //Contador de número de items producidos por cada hebra productora
 
@@ -81,7 +81,6 @@ void test_contadores()
 
 void  funcion_hebra_productora( int numHebra )
 {
-    //Solución válida para FIFO y LIFO
    for(unsigned i = 0 ; i < itemsPorHebraProductora ; i++ )
    {
       unsigned dato = producir_dato(numHebra);
@@ -98,23 +97,6 @@ void  funcion_hebra_productora( int numHebra )
 
 void funcion_hebra_consumidora( int numHebra )
 {
-   //Solución LIFO
-   for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
-   {
-      int dato;
-      sem_wait(ocupadas);
-      sem_wait(cons); //cons.lock();
-      primera_libre--;
-      dato = buffer[primera_libre];
-      sem_signal(cons); //cons.unlock();
-      sem_signal(libres);
-      consumir_dato( dato , numHebra);
-    }
-}
-
-void funcion_hebra_consumidoraFIFO( int numHebra )
-{
-    //Solución FIFO
     for( unsigned i = 0 ; i < itemsPorHebraConsumidora ; i++ )
     {
         int dato;
@@ -132,7 +114,7 @@ void funcion_hebra_consumidoraFIFO( int numHebra )
 int main()
 {
     cout << "--------------------------------------------------------------------" << endl
-         << "Problema del productor-consumidor múltiples (Monitor SU, buffer LIFO). " << endl
+         << "Problema del productor-consumidor múltiples (solución FIFO). " << endl
          << "Productores: " << numProductores << "   Consumidores: " << numConsumidores <<
          "       Nº de items: " << num_items << endl
          << "--------------------------------------------------------------------" << endl
