@@ -108,7 +108,7 @@ void funcion_buffer()
       MPI_Recv ( &peticion, 1, MPI_INT, id_consumidor, 0, MPI_COMM_WORLD, &estado );
 
       cout << "Buffer va a enviar valor " << valor << endl ;
-      MPI_Ssend( &valor,    1, MPI_INT, id_consumidor, 0, MPI_COMM_WORLD);
+      MPI_Ssend( &valor,1, MPI_INT, id_consumidor,0, MPI_COMM_WORLD);
    }
 }
 
@@ -124,7 +124,7 @@ int main( int argc, char *argv[] )
 
   if ( num_procesos_esperado == num_procesos_actual )
   {
-    if ( id_propio == id_productor )  // si mi ident. es el del productor
+    if (id_propio == id_productor )  // si mi ident. es el del productor
       funcion_productor();            //    ejecutar función del productor
     else if ( id_propio == id_buffer )// si mi ident. es el del buffer
       funcion_buffer();               //    ejecutar función buffer
