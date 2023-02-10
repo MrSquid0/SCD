@@ -17,7 +17,6 @@ unsigned
    cont_cons[num_items] = {0}, // contadores de verificación: para cada dato, número de veces que se ha consumido.
    siguiente_dato       = 0 ,  // siguiente dato a producir en 'producir_dato' (solo se usa ahí)
    primera_libre = 0, //Celda a insertar en el buffer
-   primera_ocupada = 0, //Celda a extraer del buffer
    buffer[tam_vec]; //Buffer intermedio por donde se pasan los datos
 
 Semaphore

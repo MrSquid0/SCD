@@ -7,10 +7,16 @@ flagsc     := -std=c++11 -g -Wall
 pc: prodcons_mpi_exe
 	mpirun -oversubscribe -np  3 ./$<
 
-pc2: prodcons2_mpi_exe
+pc2fifo: prodcons2-FIFO_mpi_exe
 	mpirun -oversubscribe  -np  3 ./$<
 
-pcm: prodcons2-mu_mpi_exe
+pc2lifo: prodcons2-LIFO_mpi_exe
+	mpirun -oversubscribe  -np  3 ./$<
+
+pcmfifo: prodcons2-mu-FIFO_mpi_exe
+	mpirun -oversubscribe  -np  10 ./$<
+
+pcmlifo: prodcons2-mu-LIFO_mpi_exe
 	mpirun -oversubscribe  -np  10 ./$<
 
 fp: filosofos-plantilla_mpi_exe
